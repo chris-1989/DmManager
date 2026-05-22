@@ -35,6 +35,7 @@ abstract class AbstractDmpImportHandler implements DmpImportHandler {
                 "log=" + logPath,
                 "TABLE_EXISTS_ACTION=TRUNCATE",  // ✅ 核心：清空表数据再导入（彻底解决唯一约束）
                 "IGNORE=Y",                     // ✅ 忽略所有非致命错误
+                "IGNORE_INIT_PARA=1",           // ✅ 新增核心参数：忽略 CASE_SENSITIVE 等参数不匹配
                 "INDEXES=Y",                    // 导入索引
                 "CONSTRAINTS=Y"                 // 导入约束
         };
@@ -43,7 +44,6 @@ abstract class AbstractDmpImportHandler implements DmpImportHandler {
         try {
             duplicateTables.clear();
             notifier.notifyLog("===== 开始达梦DMP导入 =====");
-            notifier.notifyLog("导入选项: ignoreExisting=true, data=true, indexes=true, constraints=true, rollback=true");
             notifier.notifyLog("执行命令：" + String.join(" ", command));
             notifier.notifyProgress(0);
 

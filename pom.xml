@@ -39,17 +39,17 @@
             <scope>provided</scope> <!-- 改为provided，因为我们是调用外部dimp.exe，不是用这个Java API -->
         </dependency>
 
-        <dependency>
-            <groupId>com.formdev</groupId>
-            <artifactId>flatlaf</artifactId>
-            <version>3.2.5</version>
-        </dependency>
-        <!-- 可选：额外的主题包（含暗色/亮色主题） -->
-        <dependency>
-            <groupId>com.formdev</groupId>
-            <artifactId>flatlaf-intellij-themes</artifactId>
-            <version>3.2.5</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.formdev</groupId>-->
+<!--            <artifactId>flatlaf</artifactId>-->
+<!--            <version>3.2.5</version>-->
+<!--        </dependency>-->
+<!--        &lt;!&ndash; 可选：额外的主题包（含暗色/亮色主题） &ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>com.formdev</groupId>-->
+<!--            <artifactId>flatlaf-intellij-themes</artifactId>-->
+<!--            <version>3.2.5</version>-->
+<!--        </dependency>-->
 
         <!-- 数据库连接池 -->
         <dependency>

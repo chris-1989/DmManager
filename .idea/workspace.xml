@@ -5,49 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="356802fd-d7d6-4d39-9969-d0e464f9444c" name="Changes" comment="init">
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/dmadmin/DmAdminApplication.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/dmadmin/dao/UserManagementDao.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/dmadmin/dmp/AbstractDmpImportHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/dmadmin/dmp/DmDimpNativeBridge.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/dmadmin/dmp/DmpImportContext.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/dmadmin/dmp/DmpImportHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/dmadmin/dmp/DmpImportHandlerFactory.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/dmadmin/dmp/FullDatabaseDmpImportHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/dmadmin/dmp/ImportMode.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/dmadmin/dmp/ImportProgressListener.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/dmadmin/dmp/ImportProgressNotifier.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/dmadmin/dmp/SchemaDmpImportHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/dmadmin/dmp/TableDmpImportHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/dmadmin/exception/ConnectionFailureException.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/dmadmin/exception/DmAdminException.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/dmadmin/exception/NativeLibraryException.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/dmadmin/exception/SqlExecutionException.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/dmadmin/exception/ValidationException.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/dmadmin/model/DbConnectionProfile.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/dmadmin/model/DmpImportOptions.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/dmadmin/model/UserCreateRequest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/dmadmin/model/UserSummary.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/dmadmin/pool/ConnectionPoolManager.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/dmadmin/service/ConnectionManagementService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/dmadmin/service/DmpImportService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/dmadmin/service/UserManagementService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/dmadmin/ui/ConnectionPanel.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/dmadmin/ui/DmAdminSwingLauncher.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/dmadmin/ui/DmpImportPanel.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/dmadmin/ui/MainFrame.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/dmadmin/ui/SessionState.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/dmadmin/ui/UserManagementPanel.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/dmadmin/util/AppProperties.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/dmadmin/util/PasswordStrengthValidator.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/dmadmin/util/SqlIdentifierValidator.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/application.properties" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/logback.xml" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/src/test/java/com/dmadmin/dmp/DmpImportHandlerFactoryTest.java" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/src/test/java/com/dmadmin/util/PasswordStrengthValidatorTest.java" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/src/test/java/com/dmadmin/util/SqlIdentifierValidatorTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/dmadmin/dmp/AbstractDmpImportHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/dmadmin/dmp/AbstractDmpImportHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/dmadmin/ui/UserManagementPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/dmadmin/ui/UserManagementPanel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.properties" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -66,29 +31,31 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "Maven.dm-admin-tool [clean].executor": "Run",
-    "Maven.dm-admin-tool [install:install-file...].executor": "Run",
-    "Maven.dm-admin-tool [install].executor": "Run",
-    "Maven.dm-admin-tool [package].executor": "Run",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "codeWithMe.voiceChat.enabledByDefault": "false",
-    "git-widget-placeholder": "master",
-    "ignore.virus.scanning.warn.message": "true",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "D:/cursor临时/模拟达梦管理工具/dm-admin-tool/dm_dll",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "vcs.Git",
-    "vue.rearranger.settings.migration": "true",
-    "应用程序.DmAdminApplication.executor": "Debug"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;Maven.dm-admin-tool [clean].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.dm-admin-tool [install:install-file...].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.dm-admin-tool [install].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.dm-admin-tool [package].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.dm-admin-tool [validate].executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/cursor临时/模拟达梦管理工具/dm-admin-tool/dm_dll&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;vcs.Git&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;,
+    &quot;应用程序.DmAdminApplication.executor&quot;: &quot;Run&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="D:\cursor临时\模拟达梦管理工具\dm-admin-tool\dm_dll" />
@@ -134,7 +101,11 @@
       <workItem from="1778556408046" duration="10000" />
       <workItem from="1778556432299" duration="14844000" />
       <workItem from="1778635779494" duration="17985000" />
-      <workItem from="1778720854111" duration="9344000" />
+      <workItem from="1778720854111" duration="17190000" />
+      <workItem from="1778825402744" duration="1156000" />
+      <workItem from="1778827362312" duration="2729000" />
+      <workItem from="1779325843638" duration="11134000" />
+      <workItem from="1779431342434" duration="958000" />
     </task>
     <task id="LOCAL-00001" summary="init">
       <option name="closed" value="true" />
@@ -144,7 +115,15 @@
       <option name="project" value="LOCAL" />
       <updated>1778729814054</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="init">
+      <option name="closed" value="true" />
+      <created>1778737604785</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1778737604785</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
