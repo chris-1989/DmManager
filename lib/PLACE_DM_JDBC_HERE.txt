@@ -1,0 +1,12 @@
+请将官方 DmJdbcDriver18.jar 复制到此目录（与本档同层），执行示例：
+
+  mvn -q -DskipTests package
+  java -cp "target/classes;lib/DmJdbcDriver18.jar" com.dmadmin.DmAdminApplication
+
+Windows PowerShell：
+
+  java -cp "target/classes;lib/DmJdbcDriver18.jar" com.dmadmin.DmAdminApplication
+
+
+
+

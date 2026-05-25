@@ -1,0 +1,25 @@
+# Maven
+target/
+src/test/
+*.jar
+*.war
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Logs
+logs/
+*.log
+
+# Native libraries (Dameng DLLs)
+dm_dll/
+
+# Local configuration
+dm-admin-local.properties
+
+# OS
+.DS_Store
+Thumbs.db
