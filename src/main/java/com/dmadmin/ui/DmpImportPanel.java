@@ -77,6 +77,17 @@ public class DmpImportPanel extends JPanel {
         this.props = props;
         this.session = session;
 
+        String defaultDimpPath = props.getString("dm.dimp.tool.path", "");
+        if (!defaultDimpPath.isEmpty()) {
+            defaultDimpPath = new File(defaultDimpPath).getPath();
+        } else {
+            String nativeDir = props.getString("dm.dimp.native.library.dir", "");
+            if (!nativeDir.isEmpty()) {
+                defaultDimpPath = new File(nativeDir, "dimp.exe").getPath();
+            }
+        }
+        dmpToolPath.setText(defaultDimpPath);
+
         comboMode.setSelectedItem(ImportMode.FULL_DATABASE);
         comboMode.setEnabled(false);
 

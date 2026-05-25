@@ -5,6 +5,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -29,13 +31,13 @@ public final class AppProperties {
     public AppProperties() throws IOException {
         try (InputStream in = AppProperties.class.getResourceAsStream(DEFAULT_RESOURCE)) {
             if (in != null) {
-                props.load(in);
+                props.load(new InputStreamReader(in, StandardCharsets.UTF_8));
             }
         }
         Path local = Paths.get(LOCAL_FILE);
         if (Files.isRegularFile(local)) {
             try (InputStream in = Files.newInputStream(local)) {
-                props.load(in);
+                props.load(new InputStreamReader(in, StandardCharsets.UTF_8));
                 LOG.info("已加载外部设定档: {}", local.toAbsolutePath());
             }
         }
