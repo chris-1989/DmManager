@@ -20,7 +20,8 @@
 target\*
 dm_dll\*
 lib\*
-src\test\*
+src\main\test\*
+workspace.xml
 
 # Maven
 target/
