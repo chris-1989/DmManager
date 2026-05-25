@@ -5,7 +5,7 @@ import com.dmadmin.util.AppProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.JFrame;
+import com.formdev.flatlaf.FlatLightLaf;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
@@ -28,7 +28,7 @@ public final class DmAdminSwingLauncher {
 
         SwingUtilities.invokeLater(() -> {
             try {
-                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+                UIManager.setLookAndFeel(new FlatLightLaf());
             } catch (Exception e) {
                 LOG.debug("使用预设外观: {}", e.toString());
             }
@@ -43,10 +43,6 @@ public final class DmAdminSwingLauncher {
             ConnectionPoolManager pools = ConnectionPoolManager.getInstance();
             Runtime.getRuntime().addShutdownHook(new Thread(pools::shutdownAll));
             MainFrame frame = new MainFrame(props, pools);
-            frame.setTitle("达梦数据库管理工具");
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.setSize(960, 680);
-            frame.setLocationRelativeTo(null);
             frame.setVisible(true);
         });
     }

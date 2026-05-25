@@ -4,15 +4,19 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="356802fd-d7d6-4d39-9969-d0e464f9444c" name="Changes" comment="init">
+    <list default="true" id="356802fd-d7d6-4d39-9969-d0e464f9444c" name="Changes" comment="（v1.0）&#10;第一次提交，稳定版">
       <change afterPath="$PROJECT_DIR$/src/test/java/com/dmadmin/dmp/DmpImportHandlerFactoryTest.java" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/src/test/java/com/dmadmin/util/PasswordStrengthValidatorTest.java" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/src/test/java/com/dmadmin/util/SqlIdentifierValidatorTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/dmadmin/dmp/AbstractDmpImportHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/dmadmin/dmp/AbstractDmpImportHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/dmadmin/ui/ConnectionPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/dmadmin/ui/ConnectionPanel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/dmadmin/ui/DmAdminSwingLauncher.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/dmadmin/ui/DmAdminSwingLauncher.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/dmadmin/ui/DmpImportPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/dmadmin/ui/DmpImportPanel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/dmadmin/ui/MainFrame.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/dmadmin/ui/MainFrame.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/dmadmin/ui/SessionState.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/dmadmin/ui/SessionState.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/dmadmin/ui/UserManagementPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/dmadmin/ui/UserManagementPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.properties" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -105,7 +109,8 @@
       <workItem from="1778825402744" duration="1156000" />
       <workItem from="1778827362312" duration="2729000" />
       <workItem from="1779325843638" duration="11134000" />
-      <workItem from="1779431342434" duration="958000" />
+      <workItem from="1779431342434" duration="8591000" />
+      <workItem from="1779672425638" duration="1928000" />
     </task>
     <task id="LOCAL-00001" summary="init">
       <option name="closed" value="true" />
@@ -123,7 +128,15 @@
       <option name="project" value="LOCAL" />
       <updated>1778737604785</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="（v1.0）&#10;第一次提交，稳定版">
+      <option name="closed" value="true" />
+      <created>1779432562590</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1779432562590</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -131,6 +144,7 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="init" />
-    <option name="LAST_COMMIT_MESSAGE" value="init" />
+    <MESSAGE value="（v1.0）&#10;第一次提交，稳定版" />
+    <option name="LAST_COMMIT_MESSAGE" value="（v1.0）&#10;第一次提交，稳定版" />
   </component>
 </project>

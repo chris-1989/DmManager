@@ -13,6 +13,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -27,8 +28,12 @@ import javax.swing.SwingWorker;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.GridLayout;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.io.File;
 import java.nio.charset.Charset;
 
@@ -38,10 +43,11 @@ import java.nio.charset.Charset;
 public class DmpImportPanel extends JPanel {
 
     private final AppProperties props;
-    private final JTextField fieldHost = new JTextField("127.0.0.1", 12);
-    private final JTextField fieldPort = new JTextField("5236", 6);
-    private final JTextField fieldUser = new JTextField("SYSDBA", 12);
-    private final JPasswordField fieldPass = new JPasswordField(12);
+    private final SessionState session;
+    private final JTextField fieldHost = new JTextField("127.0.0.1", 16);
+    private final JTextField fieldPort = new JTextField("5236", 8);
+    private final JTextField fieldUser = new JTextField("SYSDBA", 16);
+    private final JPasswordField fieldPass = new JPasswordField(16);
     private final JComboBox<ImportMode> comboMode = new JComboBox<>(ImportMode.values());
     private final JTextField fieldSchema = new JTextField(16);
     private final JTextField fieldTable = new JTextField(16);
@@ -51,7 +57,6 @@ public class DmpImportPanel extends JPanel {
 
     private final JTextField dmpToolPath = new JTextField(32);
 
-    // 新增：文件选择按钮
     private final JButton btnSelectDmpTool = new JButton("选择");
     private final JButton btnSelectDmp = new JButton("选择");
     private final JButton btnSelectLog = new JButton("选择");
@@ -65,40 +70,45 @@ public class DmpImportPanel extends JPanel {
     private final JProgressBar progress = new JProgressBar(0, 100);
 
     /**
-     * @param props 应用设定（JNI 字元集、原生库目录等）
+     * @param props   应用设定（JNI 字元集、原生库目录等）
+     * @param session 跨分页共享的连接信息
      */
-    public DmpImportPanel(AppProperties props) {
+    public DmpImportPanel(AppProperties props, SessionState session) {
         this.props = props;
+        this.session = session;
 
-        comboMode.setSelectedItem(ImportMode.FULL_DATABASE); // 默认选中整库导入
-        comboMode.setEnabled(false); // 关闭下拉框选择功能
+        comboMode.setSelectedItem(ImportMode.FULL_DATABASE);
+        comboMode.setEnabled(false);
 
         fieldSchema.setVisible(false);
         fieldTable.setVisible(false);
         fieldRemap.setVisible(false);
 
-        // 新增：绑定文件选择按钮事件
         bindFileChooserEvents();
 
         setLayout(new BorderLayout(8, 8));
-        setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
-        add(buildForm(), BorderLayout.NORTH);
-        logArea.setEditable(false);
-        add(new JScrollPane(logArea), BorderLayout.CENTER);
-        progress.setStringPainted(true);
-        JButton run = new JButton("开始导入");
-        run.addActionListener(e -> runImport());
-        JPanel south = new JPanel(new BorderLayout(4, 4));
-        south.add(progress, BorderLayout.CENTER);
-        south.add(run, BorderLayout.EAST);
-        add(south, BorderLayout.SOUTH);
+        setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
+        add(buildTopPanel(), BorderLayout.NORTH);
+        add(buildCenterPanel(), BorderLayout.CENTER);
+        add(buildSouthPanel(), BorderLayout.SOUTH);
+
+        syncFromSession();
     }
 
     /**
-     * 新增：绑定文件选择按钮的事件监听
+     * 从 SessionState 同步连接信息到表单字段。
      */
+    public void syncFromSession() {
+        if (session == null) return;
+        com.dmadmin.model.DbConnectionProfile profile = session.getConnectionProfile();
+        if (profile == null) return;
+        fieldHost.setText(profile.getHost());
+        fieldPort.setText(String.valueOf(profile.getPort()));
+        fieldUser.setText(profile.getUsername());
+        fieldPass.setText(profile.getPassword());
+    }
+
     private void bindFileChooserEvents() {
-        // 选择dimp.exe文件
         btnSelectDmpTool.addActionListener(e -> {
             FileFilter exeFilter = new FileNameExtensionFilter("可执行文件 (*.exe)", "exe");
             String path = selectFile("选择dimp.exe执行文件", "选择", exeFilter);
@@ -107,7 +117,6 @@ public class DmpImportPanel extends JPanel {
             }
         });
 
-        // 选择DMP数据文件
         btnSelectDmp.addActionListener(e -> {
             FileFilter dmpFilter = new FileNameExtensionFilter("DMP数据文件 (*.dmp)", "dmp");
             String path = selectFile("选择DMP数据文件", "选择", dmpFilter);
@@ -116,7 +125,6 @@ public class DmpImportPanel extends JPanel {
             }
         });
 
-        // 选择日志文件（支持新建/选择已有）
         btnSelectLog.addActionListener(e -> {
             FileFilter logFilter = new FileNameExtensionFilter("日志文件 (*.log)", "log");
             String path = selectFile("选择/新建日志文件", "选择", logFilter);
@@ -126,81 +134,119 @@ public class DmpImportPanel extends JPanel {
         });
     }
 
-    /**
-     * 新增：通用文件选择对话框
-     * @param title 对话框标题
-     * @param approveText 确认按钮文本
-     * @param filter 文件类型过滤器
-     * @return 选中的文件绝对路径，取消则返回null
-     */
     private String selectFile(String title, String approveText, FileFilter filter) {
         JFileChooser fileChooser = new JFileChooser();
-        // 设置对话框标题
         fileChooser.setDialogTitle(title);
-        // 设置确认按钮文本
         fileChooser.setApproveButtonText(approveText);
-        // 设置文件类型过滤
         if (filter != null) {
             fileChooser.setFileFilter(filter);
         }
-        // 仅允许选择文件（不选文件夹）
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-        // 允许用户输入新文件名（比如日志文件可以新建）
         fileChooser.setAcceptAllFileFilterUsed(true);
-
-        // 显示文件选择对话框
         int result = fileChooser.showSaveDialog(this);
         if (result == JFileChooser.APPROVE_OPTION) {
             File selectedFile = fileChooser.getSelectedFile();
-            // 返回选中文件的绝对路径
             return selectedFile.getAbsolutePath();
         }
         return null;
     }
 
-    private JPanel buildForm() {
-        JPanel p = new JPanel(new GridLayout(0, 2, 6, 6));
-        p.add(new JLabel("主机"));
-        p.add(fieldHost);
-        p.add(new JLabel("端口"));
-        p.add(fieldPort);
-        p.add(new JLabel("使用者"));
-        p.add(fieldUser);
-        p.add(new JLabel("密码"));
-        p.add(fieldPass);
-        p.add(new JLabel("导入模式"));
-        p.add(comboMode);
+    private JPanel buildTopPanel() {
+        JPanel top = new JPanel(new BorderLayout(8, 8));
 
-        // 改造：dimp.exe路径 - 文本框+选择按钮
-        JPanel panelDmpTool = new JPanel(new BorderLayout(4, 4));
-        panelDmpTool.add(dmpToolPath, BorderLayout.CENTER);
-        panelDmpTool.add(btnSelectDmpTool, BorderLayout.EAST);
-        p.add(new JLabel("运行dimp.exe文件路径"));
-        p.add(panelDmpTool);
+        JPanel connPanel = buildConnectionSection();
+        JPanel importPanel = buildImportSection();
 
-        // 改造：DMP文件路径 - 文本框+选择按钮
-        JPanel panelDmp = new JPanel(new BorderLayout(4, 4));
-        panelDmp.add(fieldDmp, BorderLayout.CENTER);
-        panelDmp.add(btnSelectDmp, BorderLayout.EAST);
-        p.add(new JLabel("DMP 档路径"));
-        p.add(panelDmp);
+        top.add(connPanel, BorderLayout.WEST);
+        top.add(importPanel, BorderLayout.CENTER);
+        return top;
+    }
 
-        // 改造：日志文件路径 - 文本框+选择按钮
-        JPanel panelLog = new JPanel(new BorderLayout(4, 4));
-        panelLog.add(fieldLog, BorderLayout.CENTER);
-        panelLog.add(btnSelectLog, BorderLayout.EAST);
-        p.add(new JLabel("日志档路径"));
-        p.add(panelLog);
+    private JPanel buildConnectionSection() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBorder(BorderFactory.createTitledBorder("数据库连接"));
 
-//        JPanel flags = new JPanel(new FlowLayout(FlowLayout.LEFT));
-//        flags.add(chkIgnore);
-//        flags.add(chkData);
-//        flags.add(chkIdx);
-//        flags.add(chkCons);
-//        flags.add(chkRollback);
-//        p.add(new JLabel("选项"));
-//        p.add(flags);
-        return p;
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(4, 6, 4, 6);
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        addFormRow(panel, gbc, 0, "主机", fieldHost);
+        addFormRow(panel, gbc, 1, "端口", fieldPort);
+        addFormRow(panel, gbc, 2, "使用者", fieldUser);
+        addFormRow(panel, gbc, 3, "密码", fieldPass);
+
+        return panel;
+    }
+
+    private JPanel buildImportSection() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBorder(BorderFactory.createTitledBorder("导入配置"));
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(4, 6, 4, 6);
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        addFormRow(panel, gbc, 0, "导入模式", comboMode);
+
+        JPanel toolPathPanel = new JPanel(new BorderLayout(4, 0));
+        toolPathPanel.add(dmpToolPath, BorderLayout.CENTER);
+        toolPathPanel.add(btnSelectDmpTool, BorderLayout.EAST);
+        addFormRow(panel, gbc, 1, "dimp.exe 路径", toolPathPanel);
+
+        JPanel dmpPathPanel = new JPanel(new BorderLayout(4, 0));
+        dmpPathPanel.add(fieldDmp, BorderLayout.CENTER);
+        dmpPathPanel.add(btnSelectDmp, BorderLayout.EAST);
+        addFormRow(panel, gbc, 2, "DMP 文件路径", dmpPathPanel);
+
+        JPanel logPathPanel = new JPanel(new BorderLayout(4, 0));
+        logPathPanel.add(fieldLog, BorderLayout.CENTER);
+        logPathPanel.add(btnSelectLog, BorderLayout.EAST);
+        addFormRow(panel, gbc, 3, "日志文件路径", logPathPanel);
+
+        return panel;
+    }
+
+    private void addFormRow(JPanel panel, GridBagConstraints gbc, int row, String label, JComponent field) {
+        JLabel jLabel = new JLabel(label);
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.weightx = 0;
+        panel.add(jLabel, gbc);
+
+        gbc.gridx = 1;
+        gbc.weightx = 1;
+        panel.add(field, gbc);
+    }
+
+    private JPanel buildCenterPanel() {
+        JPanel panel = new JPanel(new BorderLayout(0, 6));
+        panel.setBorder(BorderFactory.createTitledBorder("导入日志"));
+
+        logArea.setEditable(false);
+        logArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        JScrollPane logScroll = new JScrollPane(logArea);
+        logScroll.setPreferredSize(new Dimension(0, 280));
+        panel.add(logScroll, BorderLayout.CENTER);
+
+        return panel;
+    }
+
+    private JPanel buildSouthPanel() {
+        JPanel panel = new JPanel(new BorderLayout(8, 4));
+
+        progress.setStringPainted(true);
+        progress.setPreferredSize(new Dimension(0, 22));
+        panel.add(progress, BorderLayout.CENTER);
+
+        JButton runBtn = new JButton("开始导入");
+        runBtn.addActionListener(e -> runImport());
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        btnPanel.add(runBtn);
+        panel.add(btnPanel, BorderLayout.EAST);
+
+        return panel;
     }
 
     private void appendLog(String line) {

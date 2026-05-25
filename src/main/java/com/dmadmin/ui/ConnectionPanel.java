@@ -13,6 +13,7 @@ import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
+import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -23,11 +24,11 @@ import java.awt.Insets;
  */
 public class ConnectionPanel extends JPanel {
 
-    private final JTextField fieldId = new JTextField("default", 16);
-    private final JTextField fieldHost = new JTextField("127.0.0.1", 16);
+    private final JTextField fieldId = new JTextField("default", 20);
+    private final JTextField fieldHost = new JTextField("127.0.0.1", 20);
     private final JTextField fieldPort = new JTextField("5236", 8);
-    private final JTextField fieldUser = new JTextField("SYSDBA", 16);
-    private final JPasswordField fieldPass = new JPasswordField(16);
+    private final JTextField fieldUser = new JTextField("SYSDBA", 20);
+    private final JPasswordField fieldPass = new JPasswordField(20);
     private final ConnectionManagementService connService;
     private final SessionState session;
 
@@ -38,37 +39,58 @@ public class ConnectionPanel extends JPanel {
     public ConnectionPanel(ConnectionManagementService connService, SessionState session) {
         this.connService = connService;
         this.session = session;
-        setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
-        setLayout(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(4, 4, 4, 4);
-        gbc.anchor = GridBagConstraints.WEST;
-        int row = 0;
-        addPair(gbc, row++, new JLabel("连接 ID"), fieldId);
-        addPair(gbc, row++, new JLabel("主机"), fieldHost);
-        addPair(gbc, row++, new JLabel("端口"), fieldPort);
-        addPair(gbc, row++, new JLabel("使用者"), fieldUser);
-        addPair(gbc, row++, new JLabel("密码"), fieldPass);
-        gbc.gridx = 1;
-        gbc.gridy = row;
-        gbc.gridwidth = 1;
-        JPanel btnRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
-        JButton reg = new JButton("连接数据库");
-        reg.addActionListener(e -> onRegister());
-        JButton test = new JButton("#测试连接#");
-        test.addActionListener(e -> onTest());
-        btnRow.add(reg);
-        btnRow.add(test);
-        add(btnRow, gbc);
+        setBorder(BorderFactory.createEmptyBorder(24, 24, 24, 24));
+        setLayout(new BorderLayout(0, 16));
+
+        add(buildFormPanel(), BorderLayout.CENTER);
+        add(buildButtonPanel(), BorderLayout.SOUTH);
     }
 
-    private void addPair(GridBagConstraints gbc, int row, JLabel label, JTextField field) {
+    private JPanel buildFormPanel() {
+        JPanel form = new JPanel(new GridBagLayout());
+        form.setBorder(BorderFactory.createTitledBorder("数据库连接配置"));
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(8, 8, 8, 8);
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        addRow(form, gbc, 0, "连接 ID", fieldId);
+        addRow(form, gbc, 1, "主机", fieldHost);
+        addRow(form, gbc, 2, "端口", fieldPort);
+        addRow(form, gbc, 3, "使用者", fieldUser);
+        addRow(form, gbc, 4, "密码", fieldPass);
+
+        return form;
+    }
+
+    private void addRow(JPanel form, GridBagConstraints gbc, int row, String label, JTextField field) {
+        JLabel jLabel = new JLabel(label);
+        jLabel.setPreferredSize(new java.awt.Dimension(60, 28));
         gbc.gridx = 0;
         gbc.gridy = row;
         gbc.gridwidth = 1;
-        add(label, gbc);
+        gbc.weightx = 0;
+        form.add(jLabel, gbc);
+
         gbc.gridx = 1;
-        add(field, gbc);
+        gbc.gridy = row;
+        gbc.weightx = 1;
+        form.add(field, gbc);
+    }
+
+    private JPanel buildButtonPanel() {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 16, 8));
+
+        JButton regBtn = new JButton("连接数据库");
+        regBtn.addActionListener(e -> onRegister());
+
+        JButton testBtn = new JButton("测试连接");
+        testBtn.addActionListener(e -> onTest());
+
+        panel.add(regBtn);
+        panel.add(testBtn);
+        return panel;
     }
 
     private void onRegister() {
@@ -78,6 +100,7 @@ public class ConnectionPanel extends JPanel {
                 DbConnectionProfile p = readProfile();
                 connService.registerConnection(p);
                 session.setConnectionId(p.getId());
+                session.setConnectionProfile(p);
                 return null;
             }
 
@@ -100,6 +123,7 @@ public class ConnectionPanel extends JPanel {
                 DbConnectionProfile p = readProfile();
                 connService.registerConnection(p);
                 session.setConnectionId(p.getId());
+                session.setConnectionProfile(p);
                 connService.testConnection(p.getId());
                 return null;
             }

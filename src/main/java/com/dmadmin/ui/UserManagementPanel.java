@@ -7,11 +7,9 @@ import com.dmadmin.service.UserManagementService;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.text.DefaultEditorKit;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
-import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
@@ -32,7 +30,7 @@ public class UserManagementPanel extends JPanel {
     private final ConnectionPoolManager poolManager;
     private final SessionState session;
     private final DefaultTableModel userTableModel = new DefaultTableModel(
-            new Object[]{"使用者", "预设表空间"}, 0) {   // 移除了状态和索引表空间列
+            new Object[]{"使用者", "预设表空间"}, 0) {
         @Override
         public boolean isCellEditable(int row, int column) {
             return false;
@@ -43,18 +41,18 @@ public class UserManagementPanel extends JPanel {
     // 单用户创建组件
     private final JTextField newUser = new JTextField(15);
     private final JPasswordField newPass = new JPasswordField(15);
-    private final JTextField newTs = new JTextField("MAIN", 12);
-    private final JTextField newIdxTs = new JTextField(12);
+    private final JTextField newTs = new JTextField("MAIN", 15);
+    private final JTextField newIdxTs = new JTextField(15);
 
     // 角色管理组件
     private final JTextField roleUser = new JTextField(20);
-    private final JTextField rolesCsv = new JTextField("RESOURCE,DBA,PUBLIC,SOI,SVI,VTI", 35);
+    private final JTextField rolesCsv = new JTextField("RESOURCE,DBA,PUBLIC,SOI,SVI,VTI", 28);
     private final JTextField dropUserField = new JTextField(20);
     private final JCheckBox dropCascade = new JCheckBox("CASCADE", true);
     private final JTextField privUser = new JTextField(20);
     private final JTextArea privOutput = new JTextArea(6, 40);
 
-    // 批量创建组件（合并到建立使用者区块）
+    // 批量创建组件
     private JComboBox<String> categoryCombo;
     private JTextArea batchOutputArea;
     private JTextArea previewUsersArea;
@@ -67,15 +65,18 @@ public class UserManagementPanel extends JPanel {
     public UserManagementPanel(ConnectionPoolManager poolManager, SessionState session) {
         this.poolManager = poolManager;
         this.session = session;
-        setLayout(new BorderLayout(10, 10));
-        setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        setLayout(new BorderLayout(12, 12));
+        setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
 
         // 左侧表格区域
+        userTable.setRowHeight(24);
+        userTable.getTableHeader().setFont(userTable.getTableHeader().getFont().deriveFont(Font.BOLD));
         JScrollPane tableScroll = new JScrollPane(userTable);
         tableScroll.setBorder(BorderFactory.createTitledBorder("数据库使用者列表"));
+        tableScroll.setPreferredSize(new Dimension(280, 0));
         add(tableScroll, BorderLayout.CENTER);
 
-        // 添加鼠标双击事件，显示用户详细信息（角色、系统权限、对象权限）
+        // 双击显示用户详情
         userTable.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -89,7 +90,7 @@ public class UserManagementPanel extends JPanel {
             }
         });
 
-        // ========== 自定义复制：只复制“使用者”列，并去除空格 ==========
+        // 自定义复制
         userTable.setTransferHandler(new TransferHandler() {
             @Override
             public void exportToClipboard(JComponent comp, Clipboard clip, int action) {
@@ -113,8 +114,9 @@ public class UserManagementPanel extends JPanel {
         JPanel rightPanel = buildRightPanel();
         JScrollPane controlScroll = new JScrollPane(rightPanel);
         controlScroll.setBorder(BorderFactory.createEmptyBorder());
-        controlScroll.setPreferredSize(new Dimension(660, 0));
+        controlScroll.setPreferredSize(new Dimension(640, 0));
         controlScroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        controlScroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
         controlScroll.getVerticalScrollBar().setUnitIncrement(16);
         add(controlScroll, BorderLayout.EAST);
 
@@ -124,11 +126,7 @@ public class UserManagementPanel extends JPanel {
         initRoleBatchUI();
     }
 
-    /**
-     * 弹出对话框，显示指定用户的角色、系统权限和对象权限详情。
-     */
     private void showUserDetails(String username) {
-        // 在后台线程中查询权限，避免阻塞 UI
         new SwingWorker<String, Void>() {
             @Override
             protected String doInBackground() throws Exception {
@@ -143,7 +141,7 @@ public class UserManagementPanel extends JPanel {
                     textArea.setEditable(false);
                     textArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
                     JScrollPane scrollPane = new JScrollPane(textArea);
-                    scrollPane.setPreferredSize(new Dimension(600, 400));
+                    scrollPane.setPreferredSize(new Dimension(620, 420));
                     JOptionPane.showMessageDialog(UserManagementPanel.this,
                             scrollPane,
                             "使用者详情: " + username,
@@ -156,67 +154,66 @@ public class UserManagementPanel extends JPanel {
     }
 
     private JPanel buildRightPanel() {
-        JPanel panel = new JPanel();
+        ScrollablePanel panel = new ScrollablePanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setBorder(BorderFactory.createEmptyBorder(10, 12, 20, 18));
+        panel.setBorder(BorderFactory.createEmptyBorder(0, 16, 20, 8));
 
         // 刷新按钮
-        JButton refreshBtn = new JButton("当前连接使用者列表");
+        JButton refreshBtn = new JButton("刷新使用者列表");
         refreshBtn.addActionListener(e -> refreshUsers());
-        JPanel refreshPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel refreshPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         refreshPanel.add(refreshBtn);
         panel.add(refreshPanel);
-        panel.add(Box.createVerticalStrut(12));
+        panel.add(Box.createVerticalStrut(16));
 
-        // 合并后的建立使用者区块
+        // 各功能区块
         panel.add(createSection("建立使用者", buildCreateUserCombinedPanel()));
-        panel.add(Box.createVerticalStrut(12));
+        panel.add(Box.createVerticalStrut(14));
         panel.add(createSection("角色管理", buildRolePanel()));
-        panel.add(Box.createVerticalStrut(12));
+        panel.add(Box.createVerticalStrut(14));
         panel.add(createSection("删除使用者", buildDropPanel()));
-        panel.add(Box.createVerticalStrut(12));
+        panel.add(Box.createVerticalStrut(14));
         panel.add(createSection("权限查询", buildPrivilegePanel()));
 
         return panel;
     }
 
-    // 合并后的建立使用者面板：上半部分单用户创建，下半部分批量创建
     private JPanel buildCreateUserCombinedPanel() {
-        JPanel p = new JPanel(new BorderLayout(5, 8));
+        JPanel p = new JPanel(new BorderLayout(5, 10));
 
         // 上半部分：单用户创建
         JPanel singlePanel = new JPanel(new GridBagLayout());
+        singlePanel.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(4, 4, 4, 4);
+        gbc.insets = new Insets(4, 4, 4, 12);
         gbc.anchor = GridBagConstraints.WEST;
 
         gbc.gridx = 0; gbc.gridy = 0; singlePanel.add(new JLabel("名称:"), gbc);
-        gbc.gridx = 1; gbc.gridy = 0; singlePanel.add(newUser, gbc);
-        gbc.gridx = 2; gbc.gridy = 0; singlePanel.add(new JLabel("密码:"), gbc);
-        gbc.gridx = 3; gbc.gridy = 0; singlePanel.add(newPass, gbc);
+        gbc.gridx = 1; singlePanel.add(newUser, gbc);
+        gbc.gridx = 2; singlePanel.add(new JLabel("密码:"), gbc);
+        gbc.gridx = 3; singlePanel.add(newPass, gbc);
 
         gbc.gridx = 0; gbc.gridy = 1; singlePanel.add(new JLabel("预设表空间:"), gbc);
-        gbc.gridx = 1; gbc.gridy = 1; singlePanel.add(newTs, gbc);
-        gbc.gridx = 2; gbc.gridy = 1; singlePanel.add(new JLabel("索引表空间:"), gbc);
-        gbc.gridx = 3; gbc.gridy = 1; singlePanel.add(newIdxTs, gbc);
+        gbc.gridx = 1; singlePanel.add(newTs, gbc);
+        gbc.gridx = 2; singlePanel.add(new JLabel("索引表空间:"), gbc);
+        gbc.gridx = 3; singlePanel.add(newIdxTs, gbc);
 
         JButton createBtn = new JButton("建立单用户");
         createBtn.addActionListener(e -> createUser());
         gbc.gridx = 3; gbc.gridy = 2; singlePanel.add(createBtn, gbc);
 
-        // 下半部分：批量创建（基于配置文件）
+        // 下半部分：批量创建
         JPanel batchPanel = new JPanel(new BorderLayout(5, 5));
         batchPanel.setBorder(BorderFactory.createTitledBorder("批量创建用户（基于配置文件）"));
-        JPanel batchTop = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel batchTop = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
         batchTop.add(new JLabel("使用者类别:"));
         categoryCombo = new JComboBox<>();
         batchTop.add(categoryCombo);
-        JButton batchCreateBtn = new JButton("批量创建所选类别所有用户");
+        JButton batchCreateBtn = new JButton("批量创建");
         batchCreateBtn.addActionListener(e -> batchCreateUsers());
         batchTop.add(batchCreateBtn);
         batchPanel.add(batchTop, BorderLayout.NORTH);
 
-        // 预览区
         previewUsersArea = new JTextArea(6, 40);
         previewUsersArea.setEditable(false);
         previewUsersArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
@@ -224,9 +221,9 @@ public class UserManagementPanel extends JPanel {
         previewScroll.setBorder(BorderFactory.createTitledBorder("当前类别下的用户列表"));
         batchPanel.add(previewScroll, BorderLayout.CENTER);
 
-        // 日志区
         batchOutputArea = new JTextArea(10, 40);
         batchOutputArea.setEditable(false);
+        batchOutputArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
         JScrollPane logScroll = new JScrollPane(batchOutputArea);
         logScroll.setBorder(BorderFactory.createTitledBorder("批量创建日志"));
         batchPanel.add(logScroll, BorderLayout.SOUTH);
@@ -237,17 +234,17 @@ public class UserManagementPanel extends JPanel {
     }
 
     private JPanel buildRolePanel() {
-        JPanel p = new JPanel(new BorderLayout(5, 8));
+        JPanel p = new JPanel(new BorderLayout(5, 10));
 
         // 上半部分：单个用户授权/回收
         JPanel singlePanel = new JPanel(new BorderLayout(5, 5));
-        JPanel top = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel top = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
         top.add(new JLabel("使用者:"));
         top.add(roleUser);
         top.add(new JLabel("角色(逗号分隔):"));
         top.add(rolesCsv);
         singlePanel.add(top, BorderLayout.NORTH);
-        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
         JButton grant = new JButton("授予角色");
         grant.addActionListener(e -> grantRoles());
         JButton revoke = new JButton("回收角色");
@@ -256,20 +253,21 @@ public class UserManagementPanel extends JPanel {
         btnPanel.add(revoke);
         singlePanel.add(btnPanel, BorderLayout.CENTER);
 
-        // 下半部分：批量授予角色（按用户类别）
+        // 下半部分：批量授予角色
         JPanel batchPanel = new JPanel(new BorderLayout(5, 5));
         batchPanel.setBorder(BorderFactory.createTitledBorder("批量授予角色（按用户类别）"));
-        JPanel batchTop = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel batchTop = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
         batchTop.add(new JLabel("用户类别:"));
         roleCategoryCombo = new JComboBox<>();
         batchTop.add(roleCategoryCombo);
-        JButton batchGrantBtn = new JButton("批量授予角色（使用上方角色列表）");
+        JButton batchGrantBtn = new JButton("批量授予角色");
         batchGrantBtn.addActionListener(e -> batchGrantRoles());
         batchTop.add(batchGrantBtn);
         batchPanel.add(batchTop, BorderLayout.NORTH);
 
         roleBatchOutputArea = new JTextArea(8, 40);
         roleBatchOutputArea.setEditable(false);
+        roleBatchOutputArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
         JScrollPane logScroll = new JScrollPane(roleBatchOutputArea);
         logScroll.setBorder(BorderFactory.createTitledBorder("批量授权日志"));
         batchPanel.add(logScroll, BorderLayout.CENTER);
@@ -280,7 +278,7 @@ public class UserManagementPanel extends JPanel {
     }
 
     private JPanel buildDropPanel() {
-        JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 6));
         p.add(new JLabel("使用者:"));
         p.add(dropUserField);
         p.add(dropCascade);
@@ -292,7 +290,7 @@ public class UserManagementPanel extends JPanel {
 
     private JPanel buildPrivilegePanel() {
         JPanel p = new JPanel(new BorderLayout(5, 5));
-        JPanel top = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel top = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
         top.add(new JLabel("使用者:"));
         top.add(privUser);
         JButton queryBtn = new JButton("查询权限");
@@ -300,6 +298,7 @@ public class UserManagementPanel extends JPanel {
         top.add(queryBtn);
         p.add(top, BorderLayout.NORTH);
         JScrollPane privScroll = new JScrollPane(privOutput);
+        privOutput.setFont(new Font("Monospaced", Font.PLAIN, 12));
         privScroll.setPreferredSize(new Dimension(580, 120));
         p.add(privScroll, BorderLayout.CENTER);
         return p;
@@ -380,7 +379,6 @@ public class UserManagementPanel extends JPanel {
     }
 
     private void initRoleBatchUI() {
-        // 无需额外初始化
     }
 
     private void batchGrantRoles() {
@@ -504,7 +502,7 @@ public class UserManagementPanel extends JPanel {
                 try { get(); } catch (Exception ex) {
                     appendBatchLog("\n[系统错误] " + ex.getMessage());
                 } finally {
-                    appendBatchLog("\n请手动点击「当前使用者列表按钮」查看最新结果。");
+                    appendBatchLog("\n请手动点击「刷新使用者列表」按钮查看最新结果。");
                     refreshUsers();
                 }
             }
@@ -557,7 +555,6 @@ public class UserManagementPanel extends JPanel {
                     List<UserSummary> rows = get();
                     userTableModel.setRowCount(0);
                     for (UserSummary u : rows) {
-                        // 只填充用户名和预设表空间
                         userTableModel.addRow(new Object[]{
                                 u.getUsername(),
                                 u.getDefaultTablespace()
@@ -694,6 +691,29 @@ public class UserManagementPanel extends JPanel {
     private void alertInfo(String msg) {
         SwingUtilities.invokeLater(() ->
                 JOptionPane.showMessageDialog(this, msg, "提示", JOptionPane.INFORMATION_MESSAGE));
+    }
+
+    private static class ScrollablePanel extends JPanel implements Scrollable {
+        @Override
+        public Dimension getPreferredScrollableViewportSize() {
+            return getPreferredSize();
+        }
+        @Override
+        public int getScrollableUnitIncrement(Rectangle visibleRect, int orientation, int direction) {
+            return 16;
+        }
+        @Override
+        public int getScrollableBlockIncrement(Rectangle visibleRect, int orientation, int direction) {
+            return 48;
+        }
+        @Override
+        public boolean getScrollableTracksViewportWidth() {
+            return true;
+        }
+        @Override
+        public boolean getScrollableTracksViewportHeight() {
+            return false;
+        }
     }
 
     private static class CategoryInfo {

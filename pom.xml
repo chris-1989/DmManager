@@ -31,25 +31,20 @@
             <version>${dm.jdbc.version}</version>
         </dependency>
 
-        <!-- 达梦导入导出工具依赖（注意：这个依赖可能在公共仓库不存在，需要手动安装到本地仓库） -->
+        <!-- 达梦导入导出工具依赖 -->
         <dependency>
             <groupId>com.dameng</groupId>
             <artifactId>impexp</artifactId>
             <version>2.0.0</version>
-            <scope>provided</scope> <!-- 改为provided，因为我们是调用外部dimp.exe，不是用这个Java API -->
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/impexp.jar</systemPath>
         </dependency>
 
-<!--        <dependency>-->
-<!--            <groupId>com.formdev</groupId>-->
-<!--            <artifactId>flatlaf</artifactId>-->
-<!--            <version>3.2.5</version>-->
-<!--        </dependency>-->
-<!--        &lt;!&ndash; 可选：额外的主题包（含暗色/亮色主题） &ndash;&gt;-->
-<!--        <dependency>-->
-<!--            <groupId>com.formdev</groupId>-->
-<!--            <artifactId>flatlaf-intellij-themes</artifactId>-->
-<!--            <version>3.2.5</version>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>com.formdev</groupId>
+            <artifactId>flatlaf</artifactId>
+            <version>3.2.5</version>
+        </dependency>
 
         <!-- 数据库连接池 -->
         <dependency>
