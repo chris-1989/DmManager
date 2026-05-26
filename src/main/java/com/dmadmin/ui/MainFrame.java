@@ -26,14 +26,37 @@ public class MainFrame extends JFrame {
         super();
         ConnectionManagementService connSvc = new ConnectionManagementService(poolManager, props);
         setLayout(new BorderLayout());
+
         JTabbedPane tabs = new JTabbedPane(SwingConstants.TOP);
         tabs.setTabPlacement(JTabbedPane.TOP);
-        tabs.addTab("连接", new ConnectionPanel(connSvc, session));
-        tabs.addTab("使用者", new UserManagementPanel(poolManager, session));
+
+        ConnectionPanel connPanel = new ConnectionPanel(connSvc, session);
+        tabs.addTab("连接", connPanel);
+
+        UserManagementPanel userPanel = new UserManagementPanel(poolManager, session);
+        tabs.addTab("使用者", userPanel);
+
         DmpImportPanel dmpPanel = new DmpImportPanel(props, session);
         tabs.addTab("DMP 导入", dmpPanel);
+
+        // 初始禁用后两个页签，连接成功后才放开
+        tabs.setEnabledAt(1, false);
+        tabs.setEnabledAt(2, false);
+
+        connPanel.setOnConnected(() -> {
+            tabs.setEnabledAt(1, true);
+            tabs.setEnabledAt(2, true);
+        });
+
+        connPanel.setOnDisconnected(() -> {
+            tabs.setEnabledAt(1, false);
+            tabs.setEnabledAt(2, false);
+        });
+
         tabs.addChangeListener((ChangeEvent e) -> {
-            if (tabs.getSelectedComponent() == dmpPanel) {
+            if (tabs.getSelectedComponent() == userPanel) {
+                userPanel.refreshUserList();
+            } else if (tabs.getSelectedComponent() == dmpPanel) {
                 dmpPanel.syncFromSession();
             }
         });

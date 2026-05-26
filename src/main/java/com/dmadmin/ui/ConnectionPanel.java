@@ -31,6 +31,8 @@ public class ConnectionPanel extends JPanel {
     private final JPasswordField fieldPass = new JPasswordField(20);
     private final ConnectionManagementService connService;
     private final SessionState session;
+    private Runnable onConnected;
+    private Runnable onDisconnected;
 
     /**
      * @param connService 连接服务
@@ -44,6 +46,32 @@ public class ConnectionPanel extends JPanel {
 
         add(buildFormPanel(), BorderLayout.CENTER);
         add(buildButtonPanel(), BorderLayout.SOUTH);
+    }
+
+    /**
+     * 注册连接成功后的回调（用于解锁其他功能页签）。
+     */
+    public void setOnConnected(Runnable callback) {
+        this.onConnected = callback;
+    }
+
+    /**
+     * 注册连接失败后的回调（用于重新锁定其他功能页签）。
+     */
+    public void setOnDisconnected(Runnable callback) {
+        this.onDisconnected = callback;
+    }
+
+    private void fireConnected() {
+        if (onConnected != null) {
+            SwingUtilities.invokeLater(onConnected);
+        }
+    }
+
+    private void fireDisconnected() {
+        if (onDisconnected != null) {
+            SwingUtilities.invokeLater(onDisconnected);
+        }
     }
 
     private JPanel buildFormPanel() {
@@ -109,8 +137,10 @@ public class ConnectionPanel extends JPanel {
                 try {
                     get();
                     msg("已注册连接池，当前连接 ID：" + session.getConnectionId(), false);
+                    fireConnected();
                 } catch (Exception ex) {
                     msg("注册失败：\n" + rootCause(ex), true);
+                    fireDisconnected();
                 }
             }
         }.execute();
@@ -133,8 +163,10 @@ public class ConnectionPanel extends JPanel {
                 try {
                     get();
                     msg("连接测试成功。", false);
+                    fireConnected();
                 } catch (Exception ex) {
                     msg("连接测试失败：\n" + rootCause(ex), true);
+                    fireDisconnected();
                 }
             }
         }.execute();

@@ -120,10 +120,29 @@ public class UserManagementPanel extends JPanel {
         controlScroll.getVerticalScrollBar().setUnitIncrement(16);
         add(controlScroll, BorderLayout.EAST);
 
+        // 递归给所有子组件注册滚轮事件转发，解决滚动触发面积过小的问题
+        addWheelScrolling(controlScroll, rightPanel);
+
         privOutput.setEditable(false);
         loadCategoriesFromProperties();
         initBatchCreationUI();
         initRoleBatchUI();
+    }
+
+    /**
+     * 递归将组件树中所有组件的鼠标滚轮事件转发到目标滚动面板。
+     */
+    private static void addWheelScrolling(JScrollPane scrollPane, java.awt.Component comp) {
+        comp.addMouseWheelListener(e -> {
+            javax.swing.JScrollBar bar = scrollPane.getVerticalScrollBar();
+            int delta = e.getUnitsToScroll() * bar.getUnitIncrement();
+            bar.setValue(bar.getValue() + delta);
+        });
+        if (comp instanceof java.awt.Container) {
+            for (java.awt.Component child : ((java.awt.Container) comp).getComponents()) {
+                addWheelScrolling(scrollPane, child);
+            }
+        }
     }
 
     private void showUserDetails(String username) {
@@ -541,6 +560,10 @@ public class UserManagementPanel extends JPanel {
     private UserManagementService svc() throws IllegalStateException {
         requireSession();
         return new UserManagementService(session.getConnectionId(), poolManager);
+    }
+
+    public void refreshUserList() {
+        refreshUsers();
     }
 
     private void refreshUsers() {
