@@ -1,137 +1,183 @@
 # 达梦数据库管理工具（dm-admin-tool）
 
-轻量级 Java 工具，依《达梦数据库管理工具开发》需求实现：**多连接 HikariCP 池**、**使用者与权限管理**、**DMP 导入（JNI）**，采用分层架构（DAO / Service / Util / Exception），并以工厂模式建立导入处理器、观察者模式广播导入日志与进度。另提供 **Swing 图形界面**（套件 `com.dmadmin.ui`，JDK 内建，无需 JavaFX 依赖）。
+轻量级 Java Swing 工具，提供 **多连接池管理**、**使用者与权限管理**、**DMP 批量导入** 三大功能模块。采用分层架构，集成 FlatLaf 现代外观。
 
 ## 环境需求
 
-- JDK 8 或以上
+- JDK 8+
 - Maven 3.6+
-- 达梦官方 JDBC 驱动 `DmJdbcDriver18.jar`（执行时加入 classpath，勿提交至版本库）
-- DMP 导入：达梦安装目录 `bin` 下的 **`DmDexpDimp.dll`**（Windows），且 JNI 函数名需与官方一致；若官方 DLL 导出符号与本项目 `com.dmadmin.dmp.DmDimpNativeBridge#dll_imp_dm` 不一致，需自行编写薄 C 桥接层（见源代码 JavaDoc）
+- 达梦 JDBC 驱动 `DmJdbcDriver18.jar`（放入 `lib/` 目录）
 
-## 编译
+## 快速开始
 
-```text
+### 1. 放置驱动
+
+将 `DmJdbcDriver18.jar` 复制到项目 `lib/` 目录下。
+
+### 2. 编译
+
+```bash
 cd dm-admin-tool
 mvn clean package
 ```
 
-编译不依赖本机是否已放置 `DmJdbcDriver18.jar`；执行连接或 SQL 前请将驱动放入 `lib/` 并加入 classpath。
+### 3. 启动 GUI
 
-## 执行
-
-将 `DmJdbcDriver18.jar` 复制到 `lib/` 后。
-
-### Swing 图形界面（预设）
-
-无参数或明确指定 `gui` 即开启窗口（连接 / 使用者 / DMP 导入分页）：
-
-```text
-java -cp "target/classes;lib/DmJdbcDriver18.jar" com.dmadmin.DmAdminApplication
+```bash
+java -cp "target/dm-admin-tool-1.0.0-SNAPSHOT-jar-with-dependencies.jar;lib/DmJdbcDriver18.jar" com.dmadmin.DmAdminApplication
 ```
 
-或：
+启动后显示三页签界面：**连接**、**使用者**、**DMP 导入**。
 
-```text
-java -cp "target/classes;lib/DmJdbcDriver18.jar" com.dmadmin.DmAdminApplication gui
+> 使用者与 DMP 导入页签初始为锁定状态，需先在连接页签成功连接数据库后自动解锁。
+
+---
+
+## 功能模块
+
+### 连接管理
+
+- 注册命名连接池（HikariCP），可同时管理多个数据库连接
+- 测试连接（`SELECT 1 FROM DUAL`，支持重试）
+- 连接成功后自动解锁「使用者」和「DMP 导入」页签，连接失败则重新锁定
+
+### 使用者管理
+
+- **用户列表**：查询 `DBA_USERS`，双击可查看角色、系统权限、表级权限详情
+- **单用户创建**：设置用户名、密码、表空间；可选密码策略
+- **批量创建**：在配置文件中定义用户类别，一键批量创建
+- **角色管理**：授予/回收角色，支持按类别批量授予
+- **删除用户**：支持 CASCADE 级联删除
+- **权限查询**：查询指定用户的完整权限列表
+
+### DMP 批量导入
+
+- **文件夹扫描**：选择一个文件夹，自动扫描其中所有 `.dmp` 文件并逐一导入
+- **导入前校验**：每个 DMP 文件导入前检查目标用户在数据库中是否已有数据，有则跳过并记录日志
+- **日志自动管理**：日志目录从配置读取，每个 DMP 文件自动生成独立日志（`<用户名>_<时间戳>.log`）
+- **实时进度**：进度条按文件数推进，日志区显示每个文件的导入结果
+- **连接信息自动填充**：连接页签成功后，切换到 DMP 导入页签时自动填入主机、端口、用户、密码
+
+---
+
+## 配置文件
+
+主配置文件：`src/main/resources/application.properties`
+
+```properties
+# JDBC 驱动
+dm.jdbc.driverClassName=dm.jdbc.driver.DmDriver
+
+# 连接池参数
+dm.pool.connectionTimeoutMs=30000
+dm.pool.maximumPoolSize=10
+dm.pool.minimumIdle=2
+
+# 连接测试重试
+dm.connection.testRetries=2
+dm.connection.retryDelayMs=1000
+
+# DMP 导入配置（路径请使用正斜杠 /）
+dm.dimp.native.library.dir=D:/dmdbms/bin
+dm.dimp.tool.path=D:/dmdbms/bin/dimp.exe
+dm.dimp.log.dir=D:/dmdbms/logs/dmp
+dm.dimp.native.charset=GB18030
+
+# 批量建用户配置
+dm.user.categories=dev,analyst,dba
+dm.user.category.dev.name=开发组
+dm.user.category.dev.users=USER1,USER2,USER3
+dm.user.category.dev.password=YourPassword
+dm.user.category.dev.tablespace=MAIN
 ```
 
-DMP 分页仍须正确设定 `dm.dimp.native.library.dir`（或系统可找到 `DmDexpDimp.dll`）。
+> **注意**：配置值中的路径请使用正斜杠 `/` 或双反斜杠 `\\`，单个 `\` 会被 Java Properties 当作转义符吃掉。
 
-### 命令列
+本地覆盖配置：在项目根目录创建 `dm-admin-local.properties`，其中的键值会覆盖默认配置。
 
-```text
-java -cp "target/classes;lib/DmJdbcDriver18.jar" com.dmadmin.DmAdminApplication help
+---
+
+## 项目结构
+
+```
+com.dmadmin/
+├── DmAdminApplication.java          # 入口（GUI / CLI 分发）
+├── model/                           # 数据模型
+│   ├── DbConnectionProfile.java     # 连接参数
+│   ├── UserCreateRequest.java       # 用户创建请求
+│   ├── UserSummary.java             # 用户列表行
+│   └── DmpImportOptions.java         # 导入选项
+├── pool/
+│   └── ConnectionPoolManager.java   # HikariCP 连接池单例
+├── service/
+│   ├── ConnectionManagementService.java  # 连接注册与测试
+│   ├── UserManagementService.java        # 用户 CRUD
+│   └── DmpImportService.java             # DMP 导入编排
+├── dao/
+│   └── UserManagementDao.java       # 用户相关 SQL（DBA_USERS 等）
+├── dmp/
+│   ├── ImportMode.java              # 导入模式枚举
+│   ├── DmpImportContext.java        # 导入上下文
+│   ├── DmpImportHandler.java        # 导入处理器接口
+│   ├── DmpImportHandlerFactory.java # 处理器工厂
+│   ├── AbstractDmpImportHandler.java     # dimp.exe ProcessBuilder 基类
+│   ├── TableDmpImportHandler.java        # 表级导入
+│   ├── SchemaDmpImportHandler.java       # 模式级导入
+│   ├── FullDatabaseDmpImportHandler.java # 全库导入
+│   ├── ImportProgressListener.java       # 进度观察者接口
+│   └── ImportProgressNotifier.java       # 进度事件分发
+├── exception/                       # 统一异常体系
+├── util/
+│   ├── AppProperties.java           # 配置加载（UTF-8）
+│   ├── PasswordStrengthValidator.java
+│   └── SqlIdentifierValidator.java  # SQL 注入防护
+└── ui/
+    ├── DmAdminSwingLauncher.java    # GUI 启动（FlatLaf）
+    ├── MainFrame.java               # 主窗口（三页签）
+    ├── ConnectionPanel.java         # 连接页签
+    ├── UserManagementPanel.java     # 使用者页签
+    ├── DmpImportPanel.java          # DMP 批量导入页签
+    └── SessionState.java            # 跨页签会话状态
 ```
 
-测试连接（默认端口常为 **5236**）：
+---
 
-```text
-java -cp "target/classes;lib/DmJdbcDriver18.jar" com.dmadmin.DmAdminApplication test-connection mydm 127.0.0.1 5236 SYSDBA 你的密码
-```
+## 设计模式
 
-DMP 导入演示（需本机可加载 `DmDexpDimp.dll`，并设定 `dm.dimp.native.library.dir` 或将 `bin` 加入 `PATH` / `java.library.path`）：
-
-```text
-java -Ddm.dimp.native.library.dir="C:\dmdbms\bin" -cp "target/classes;lib/DmJdbcDriver18.jar" com.dmadmin.DmAdminApplication demo-import 127.0.0.1 5236 SYSDBA 密码 TABLE MYSCHEMA MYTABLE C:\data\export.dmp C:\data\import.log
-```
-
-模式参数：`TABLE`、`SCHEMA`、`FULL`。表名或模式名不需要时可传 `null`。最后可选参数为模式映射字串，例如 `SRC_SCHEMA:DST_SCHEMA`。
-
-## 设定档
-
-- `src/main/resources/application.properties`：连接池、JNI 字元集、重试等
-- 工作目录可再放 **`dm-admin-local.properties`** 覆写相同键值
-
-## 程序结构摘要
-
-| 套件 | 说明 |
+| 模式 | 应用 |
 |------|------|
-| `com.dmadmin.pool` | `ConnectionPoolManager` 单例管理多个 HikariCP |
-| `com.dmadmin.service` | `ConnectionManagementService`、`UserManagementService`、`DmpImportService` |
-| `com.dmadmin.dao` | `UserManagementDao`（try-with-resources） |
-| `com.dmadmin.dmp` | JNI 桥接、导入工厂、三种模式处理器、`ImportProgressNotifier` |
-| `com.dmadmin.exception` | 统一 `DmAdminException` 体系 |
-| `com.dmadmin.util` | 密码强度、识别符校验、属性加载 |
+| 单例 | `ConnectionPoolManager` |
+| 工厂 | `DmpImportHandlerFactory` → 按 `ImportMode` 创建处理器 |
+| 观察者 | `ImportProgressNotifier` → `ImportProgressListener` 广播日志与进度 |
+| 构建者 | `UserCreateRequest.Builder` |
+| 模板方法 | `AbstractDmpImportHandler.invoke()` → 子类 `execute()` |
 
-## 使用示例（程序内调用）
+## 安全措施
 
-```java
-AppProperties props = new AppProperties();
-ConnectionPoolManager pools = ConnectionPoolManager.getInstance();
-DbConnectionProfile profile = new DbConnectionProfile("id1", "127.0.0.1", 5236, "SYSDBA", "pwd");
-new ConnectionManagementService(pools, props).registerConnection(profile);
-new ConnectionManagementService(pools, props).testConnection("id1");
+- SQL 标识符白名单校验（`SqlIdentifierValidator`），防注入
+- 密码强度校验（最少 9 位，含小写字母和数字）
+- 所有 JDBC 操作使用 `try-with-resources`
 
-UserManagementService users = new UserManagementService("id1", pools);
-UserCreateRequest req = UserCreateRequest.builder()
-    .username("APPUSER")
-    .password("Aa1!xxxxxx")
-    .defaultTablespace("MAIN")
-    .grantPublicRole(true)
-    .build();
-users.createUser(req);
+---
+
+## 命令行模式
+
+```bash
+# 显示帮助
+java -cp "..." com.dmadmin.DmAdminApplication help
+
+# 测试连接
+java -cp "..." com.dmadmin.DmAdminApplication test-connection mydm 127.0.0.1 5236 SYSDBA 密码
 ```
 
-## 达梦 JDBC 驱动安装说明
-
-1. 从达梦安装目录或官网取得 `DmJdbcDriver18.jar`
-2. 复制到本项目 `lib/DmJdbcDriver18.jar`（与 `PLACE_DM_JDBC_HERE.txt` 同目录说明）
-3. 执行时使用 `-cp ...;lib/DmJdbcDriver18.jar`（Windows）或对应分隔符
-
-亦可使用 `mvn install:install-file` 安装至本机 Maven 仓库后改为一般 `<dependency>`（本示例未内建该依赖，避免无 jar 时无法编译）。
-
-## DMP JNI（DmDexpDimp.dll）配置
-
-1. 确认数据库客户端/服务器安装中包含 **`DmDexpDimp.dll`**
-2. 在 `application.properties` 设定 `dm.dimp.native.library.dir` 为含该 DLL 的**绝对路径目录**，或将该目录加入系统 `PATH`
-3. 若出现 `UnsatisfiedLinkError`：多为路径错误、32/64 位元与 JVM 不一致，或 DLL 依赖项缺失（可用依赖检查工具排查）
-
-## 注意事项
-
-- 查询 `DBA_USERS`、`DBA_ROLE_PRIVS` 等需 **DBA 或相应字典检视权限**
-- 使用者与模式在达梦中关联紧密；建立使用者通常会一并建立同名模式
-- 动态 SQL 中的识别符已做白名单校验；密码仅做强度校验与双引号跳脱，请勿在不可信环境直接暴露日志
-- `DBA_USERS.DEFAULT_INDEX_TABLESPACE` 若在你使用的版本中不存在，请调整 `UserManagementDao#listUsers` 的查询字段
-
-## 导入失败“回滚”
-
-JNI 层返回非 0 时，本工具仅记录 `rollbackOnFailure` 标志并写日志；**实际资料回滚**须依达梦备份/还原策略或导入前快照自行处理。
+---
 
 ## 常见问题
 
 | 现象 | 可能原因 | 处理方式 |
 |------|----------|----------|
-| ClassNotFoundException: dm.jdbc.driver.DmDriver | classpath 未含驱动 jar | 加入 `DmJdbcDriver18.jar` |
-| 连接超时 | 防火墙、端口错误、服务未启 | 确认主机端口（预设 5236）与网络 |
-| UnsatisfiedLinkError | 找不到 DmDexpDimp | 设定 `dm.dimp.native.library.dir` 或 PATH |
-| 查询 DBA_USERS 失败 | 权限不足 | 使用 SYSDBA 或授权字典检视 |
-| JNI 返回非 0 | dmp 与库版本不符、参数错误 | 查看指定日志档、核对模式与映射字串 |
-
-## 单元测试
-
-```text
-mvn test
-```
-
-目前包含密码强度、识别符、导入工厂等与数据库无关的测试；整合测试需在具达梦实例的环境自行扩充。
+| 找不到 dm.jdbc.driver.DmDriver | 驱动 jar 不在 classpath | 将 DmJdbcDriver18.jar 放入 lib/ |
+| 连接超时 | 防火墙、端口错误 | 确认端口（默认 5236）和网络 |
+| DMP 导入跳过所有文件 | 目标用户在数据库中已有数据 | 检查用户是否有表（正常保护行为） |
+| 配置中文路径乱码 | 使用反斜杠被转义 | 改用正斜杠 `/` 或双反斜杠 `\\` |
+| 查询 DBA_USERS 失败 | 权限不足 | 使用 SYSDBA 或授权字典视图 |
