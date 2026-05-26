@@ -37,8 +37,11 @@ import java.awt.Insets;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.nio.charset.Charset;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -272,6 +275,58 @@ public class DmpImportPanel extends JPanel {
         return dir;
     }
 
+    /**
+     * 检查目标用户是否已在数据库中有数据。
+     * 逻辑：用户不存在 → 无数据；用户存在但 DBA_TABLES 无表 → 无数据。
+     *
+     * @param host     主机
+     * @param port     端口
+     * @param username 使用者
+     * @param password 密码
+     * @return 若用户已有表则返回 true
+     */
+    private boolean checkUserHasData(String host, int port, String loginUsername, String username, String password) {
+        String jdbcUrl = "jdbc:dm://" + host + ":" + port;
+        String safeUser = username.toUpperCase().replace("'", "''");
+        try {
+            Class.forName("dm.jdbc.driver.DmDriver");
+        } catch (ClassNotFoundException e) {
+            appendLog("[警告] 无法加载达梦驱动，跳过验证: " + e.getMessage());
+            return false;
+        }
+        try (Connection conn = DriverManager.getConnection(jdbcUrl, loginUsername, password);
+             Statement stmt = conn.createStatement()) {
+
+            // 先查用户是否存在
+            String checkUserSql = "SELECT COUNT(*) FROM DBA_USERS WHERE USERNAME = '" + safeUser + "'";
+            int userCount = 0;
+            try (ResultSet rs = stmt.executeQuery(checkUserSql)) {
+                if (rs.next()) {
+                    userCount = rs.getInt(1);
+                }
+            } catch (Exception e) {
+                appendLog("[提示] DBA_USERS 查询失败，尝试 DBA_TABLES: " + e.getMessage());
+            }
+
+            if (userCount == 0) {
+                appendLog("[验证] 用户 " + username + " 在数据库中不存在，视为无数据");
+                return false;
+            }
+
+            // 用户存在，检查其是否有表
+            String checkTablesSql = "SELECT COUNT(*) FROM DBA_TABLES WHERE OWNER = '" + safeUser + "'";
+            try (ResultSet rs = stmt.executeQuery(checkTablesSql)) {
+                if (rs.next()) {
+                    int tableCount = rs.getInt(1);
+                    return tableCount > 0;
+                }
+            }
+        } catch (Exception e) {
+            appendLog("[警告] 数据验证查询失败: " + e.getMessage() + "，跳过验证继续导入");
+        }
+        return false;
+    }
+
     private void runImport() {
         String dmpDirPath = fieldDmpDir.getText().trim();
         if (dmpDirPath.isEmpty()) {
@@ -337,11 +392,26 @@ public class DmpImportPanel extends JPanel {
                 Charset cs = Charset.forName(props.getString("dm.dimp.native.charset", "GB18030"));
                 DmpImportService svc = new DmpImportService(props);
 
+                String targetHost = fieldHost.getText().trim();
+
                 for (int i = 0; i < dmpFiles.length; i++) {
                     File dmpFile = dmpFiles[i];
                     String dmpName = dmpFile.getName();
-                    String logFileName = dmpName.replace(".dmp", "") + "_" + timePrefix + ".log";
+                    // 从 DMP 文件名提取目标用户名（去掉 .dmp 后缀）
+                    String dmpUser = dmpName.replaceAll("(?i)\\.dmp$", "");
+                    String logFileName = dmpUser + "_" + timePrefix + ".log";
                     String logFilePath = new File(logDir, logFileName).getAbsolutePath();
+
+                    publish("[" + (i + 1) + "/" + total + "] 检查: " + dmpName + " (目标用户: " + dmpUser + ")");
+
+                    if (checkUserHasData(targetHost, port, profile.getUsername(), dmpUser, new String(fieldPass.getPassword()))) {
+                        publish("[警告] 用户 " + dmpUser + " 在数据库中已有数据，跳过导入: " + dmpName);
+                        publish("  日志已保存: " + logFilePath);
+                        writeSkipLog(logFilePath, dmpUser, dmpName);
+                        int pct = (int) (((i + 1) * 100L) / total);
+                        publish("__PROGRESS__" + pct);
+                        continue;
+                    }
 
                     publish("[" + (i + 1) + "/" + total + "] 开始导入: " + dmpName);
                     publish("  日志文件: " + logFilePath);
@@ -400,6 +470,20 @@ public class DmpImportPanel extends JPanel {
                 }
             }
         }.execute();
+    }
+
+    private void writeSkipLog(String logFilePath, String username, String dmpName) {
+        try {
+            StringBuilder sb = new StringBuilder();
+            sb.append("========== DMP 导入跳过日志 ==========\n");
+            sb.append("时间: ").append(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date())).append("\n");
+            sb.append("DMP 文件: ").append(dmpName).append("\n");
+            sb.append("原因: 用户 ").append(username).append(" 在数据库中已有数据，为避免覆盖而跳过\n");
+            sb.append("======================================\n");
+            java.nio.file.Files.write(java.nio.file.Paths.get(logFilePath), sb.toString().getBytes("UTF-8"));
+        } catch (Exception e) {
+            appendLog("[警告] 写入跳过日志失败: " + e.getMessage());
+        }
     }
 
     private static Throwable unwrap(Exception ex) {
