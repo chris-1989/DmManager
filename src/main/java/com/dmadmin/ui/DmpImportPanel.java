@@ -35,10 +35,15 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.io.File;
+import java.io.FilenameFilter;
 import java.nio.charset.Charset;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 /**
- * DMP 导入：模式、路径、选项与日志输出（背景线程）。
+ * DMP 批量导入：扫描文件夹内所有 .dmp 文件，逐一导入，日志自动命名。
  */
 public class DmpImportPanel extends JPanel {
 
@@ -51,15 +56,13 @@ public class DmpImportPanel extends JPanel {
     private final JComboBox<ImportMode> comboMode = new JComboBox<>(ImportMode.values());
     private final JTextField fieldSchema = new JTextField(16);
     private final JTextField fieldTable = new JTextField(16);
-    private final JTextField fieldDmp = new JTextField(32);
-    private final JTextField fieldLog = new JTextField(32);
+    private final JTextField fieldDmpDir = new JTextField(32);
     private final JTextField fieldRemap = new JTextField(24);
 
     private final JTextField dmpToolPath = new JTextField(32);
 
     private final JButton btnSelectDmpTool = new JButton("选择");
-    private final JButton btnSelectDmp = new JButton("选择");
-    private final JButton btnSelectLog = new JButton("选择");
+    private final JButton btnSelectDmpDir = new JButton("选择");
 
     private final JCheckBox chkIgnore = new JCheckBox("忽略已存在表", true);
     private final JCheckBox chkData = new JCheckBox("导入资料", true);
@@ -70,7 +73,7 @@ public class DmpImportPanel extends JPanel {
     private final JProgressBar progress = new JProgressBar(0, 100);
 
     /**
-     * @param props   应用设定（JNI 字元集、原生库目录等）
+     * @param props   应用设定
      * @param session 跨分页共享的连接信息
      */
     public DmpImportPanel(AppProperties props, SessionState session) {
@@ -106,9 +109,6 @@ public class DmpImportPanel extends JPanel {
         syncFromSession();
     }
 
-    /**
-     * 从 SessionState 同步连接信息到表单字段。
-     */
     public void syncFromSession() {
         if (session == null) return;
         com.dmadmin.model.DbConnectionProfile profile = session.getConnectionProfile();
@@ -128,19 +128,14 @@ public class DmpImportPanel extends JPanel {
             }
         });
 
-        btnSelectDmp.addActionListener(e -> {
-            FileFilter dmpFilter = new FileNameExtensionFilter("DMP数据文件 (*.dmp)", "dmp");
-            String path = selectFile("选择DMP数据文件", "选择", dmpFilter);
-            if (path != null) {
-                fieldDmp.setText(path);
-            }
-        });
-
-        btnSelectLog.addActionListener(e -> {
-            FileFilter logFilter = new FileNameExtensionFilter("日志文件 (*.log)", "log");
-            String path = selectFile("选择/新建日志文件", "选择", logFilter);
-            if (path != null) {
-                fieldLog.setText(path);
+        btnSelectDmpDir.addActionListener(e -> {
+            JFileChooser chooser = new JFileChooser();
+            chooser.setDialogTitle("选择 DMP 文件夹");
+            chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+            chooser.setAcceptAllFileFilterUsed(false);
+            if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+                File dir = chooser.getSelectedFile();
+                fieldDmpDir.setText(dir.getAbsolutePath());
             }
         });
     }
@@ -192,7 +187,7 @@ public class DmpImportPanel extends JPanel {
 
     private JPanel buildImportSection() {
         JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBorder(BorderFactory.createTitledBorder("导入配置"));
+        panel.setBorder(BorderFactory.createTitledBorder("批量导入配置"));
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(4, 6, 4, 6);
@@ -206,15 +201,10 @@ public class DmpImportPanel extends JPanel {
         toolPathPanel.add(btnSelectDmpTool, BorderLayout.EAST);
         addFormRow(panel, gbc, 1, "dimp.exe 路径", toolPathPanel);
 
-        JPanel dmpPathPanel = new JPanel(new BorderLayout(4, 0));
-        dmpPathPanel.add(fieldDmp, BorderLayout.CENTER);
-        dmpPathPanel.add(btnSelectDmp, BorderLayout.EAST);
-        addFormRow(panel, gbc, 2, "DMP 文件路径", dmpPathPanel);
-
-        JPanel logPathPanel = new JPanel(new BorderLayout(4, 0));
-        logPathPanel.add(fieldLog, BorderLayout.CENTER);
-        logPathPanel.add(btnSelectLog, BorderLayout.EAST);
-        addFormRow(panel, gbc, 3, "日志文件路径", logPathPanel);
+        JPanel dmpDirPanel = new JPanel(new BorderLayout(4, 0));
+        dmpDirPanel.add(fieldDmpDir, BorderLayout.CENTER);
+        dmpDirPanel.add(btnSelectDmpDir, BorderLayout.EAST);
+        addFormRow(panel, gbc, 2, "DMP 文件夹路径", dmpDirPanel);
 
         return panel;
     }
@@ -251,7 +241,7 @@ public class DmpImportPanel extends JPanel {
         progress.setPreferredSize(new Dimension(0, 22));
         panel.add(progress, BorderLayout.CENTER);
 
-        JButton runBtn = new JButton("开始导入");
+        JButton runBtn = new JButton("开始批量导入");
         runBtn.addActionListener(e -> runImport());
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
         btnPanel.add(runBtn);
@@ -267,9 +257,53 @@ public class DmpImportPanel extends JPanel {
         });
     }
 
+    /**
+     * @return 日志文件保存目录
+     */
+    private File resolveLogDir() {
+        String logDir = props.getString("dm.dimp.log.dir", "");
+        if (logDir.isEmpty()) {
+            logDir = new File("logs", "dmp").getAbsolutePath();
+        }
+        File dir = new File(logDir);
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+        return dir;
+    }
+
     private void runImport() {
+        String dmpDirPath = fieldDmpDir.getText().trim();
+        if (dmpDirPath.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "请选择 DMP 文件夹路径", "提示", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        File dmpDir = new File(dmpDirPath);
+        if (!dmpDir.isDirectory()) {
+            JOptionPane.showMessageDialog(this, "DMP 文件夹路径无效", "错误", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        File[] dmpFiles = dmpDir.listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                return name.toLowerCase().endsWith(".dmp");
+            }
+        });
+        if (dmpFiles == null || dmpFiles.length == 0) {
+            JOptionPane.showMessageDialog(this, "未找到任何 .dmp 文件", "提示", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
         logArea.setText("");
         progress.setValue(0);
+
+        int total = dmpFiles.length;
+        String timePrefix = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        File logDir = resolveLogDir();
+        appendLog("日志目录: " + logDir.getAbsolutePath());
+        appendLog("找到 " + total + " 个 DMP 文件，开始批量导入...\n");
+
         ImportProgressNotifier notifier = new ImportProgressNotifier();
         notifier.addListener(new ImportProgressListener() {
             @Override
@@ -282,12 +316,13 @@ public class DmpImportPanel extends JPanel {
                 SwingUtilities.invokeLater(() -> progress.setValue(Math.max(0, Math.min(100, percent))));
             }
         });
-        new SwingWorker<Void, Void>() {
+
+        new SwingWorker<Void, String>() {
             @Override
             protected Void doInBackground() throws Exception {
                 int port = Integer.parseInt(fieldPort.getText().trim());
                 DbConnectionProfile profile = new DbConnectionProfile(
-                        "gui-import",
+                        "gui-batch-import",
                         fieldHost.getText().trim(),
                         port,
                         fieldUser.getText().trim(),
@@ -300,35 +335,68 @@ public class DmpImportPanel extends JPanel {
                 opt.setRollbackOnFailure(chkRollback.isSelected());
                 ImportMode mode = (ImportMode) comboMode.getSelectedItem();
                 Charset cs = Charset.forName(props.getString("dm.dimp.native.charset", "GB18030"));
-                DmpImportContext ctx = new DmpImportContext(
-                        mode,
-                        profile,
-                        fieldSchema.getText().trim(),
-                        fieldTable.getText().trim(),
-                        fieldDmp.getText().trim(),
-                        fieldLog.getText().trim(),
-                        fieldRemap.getText().trim(),
-                        opt,
-                        cs,
-                        dmpToolPath.getText().trim());
                 DmpImportService svc = new DmpImportService(props);
-                svc.importDmp(ctx, notifier);
+
+                for (int i = 0; i < dmpFiles.length; i++) {
+                    File dmpFile = dmpFiles[i];
+                    String dmpName = dmpFile.getName();
+                    String logFileName = dmpName.replace(".dmp", "") + "_" + timePrefix + ".log";
+                    String logFilePath = new File(logDir, logFileName).getAbsolutePath();
+
+                    publish("[" + (i + 1) + "/" + total + "] 开始导入: " + dmpName);
+                    publish("  日志文件: " + logFilePath);
+
+                    try {
+                        DmpImportContext ctx = new DmpImportContext(
+                                mode,
+                                profile,
+                                fieldSchema.getText().trim(),
+                                fieldTable.getText().trim(),
+                                dmpFile.getAbsolutePath(),
+                                logFilePath,
+                                fieldRemap.getText().trim(),
+                                opt,
+                                cs,
+                                dmpToolPath.getText().trim());
+                        svc.importDmp(ctx, notifier);
+                        publish("[" + (i + 1) + "/" + total + "] 导入完成: " + dmpName + "\n");
+                    } catch (Exception ex) {
+                        Throwable t = unwrap(ex);
+                        publish("[" + (i + 1) + "/" + total + "] 导入失败: " + dmpName + " - " + t.getMessage() + "\n");
+                    }
+
+                    int pct = (int) (((i + 1) * 100L) / total);
+                    publish("__PROGRESS__" + pct);
+                }
+                publish("========== 批量导入结束，共处理 " + total + " 个文件 ==========");
                 return null;
+            }
+
+            @Override
+            protected void process(List<String> chunks) {
+                for (String msg : chunks) {
+                    if (msg.startsWith("__PROGRESS__")) {
+                        int pct = Integer.parseInt(msg.substring("__PROGRESS__".length()));
+                        progress.setValue(pct);
+                    } else {
+                        appendLog(msg);
+                    }
+                }
             }
 
             @Override
             protected void done() {
                 try {
                     get();
-                    appendLog("--- 导入流程结束 ---");
-                    JOptionPane.showMessageDialog(DmpImportPanel.this, "导入完成。", "DMP",
+                    appendLog("--- 批量导入流程结束 ---");
+                    JOptionPane.showMessageDialog(DmpImportPanel.this, "批量导入完成。", "DMP",
                             JOptionPane.INFORMATION_MESSAGE);
                 } catch (Exception ex) {
                     Throwable t = unwrap(ex);
                     appendLog("错误: " + t.getMessage());
                     JOptionPane.showMessageDialog(DmpImportPanel.this,
                             t.getMessage() != null ? t.getMessage() : t.getClass().getSimpleName(),
-                            "DMP 导入失败", JOptionPane.ERROR_MESSAGE);
+                            "DMP 批量导入失败", JOptionPane.ERROR_MESSAGE);
                 }
             }
         }.execute();
