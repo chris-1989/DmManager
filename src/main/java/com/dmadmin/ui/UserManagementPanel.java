@@ -48,7 +48,7 @@ public class UserManagementPanel extends JPanel {
     private final JTextField roleUser = new JTextField(20);
     private final JTextField rolesCsv = new JTextField("RESOURCE,DBA,PUBLIC,SOI,SVI,VTI", 28);
     private final JTextField dropUserField = new JTextField(20);
-    private final JCheckBox dropCascade = new JCheckBox("CASCADE", true);
+    private final JCheckBox dropCascade = new JCheckBox("删除用户及其所属表", true);
     private final JTextField privUser = new JTextField(20);
     private final JTextArea privOutput = new JTextArea(6, 40);
 
