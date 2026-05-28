@@ -211,6 +211,19 @@ public class UserManagementPanel extends JPanel {
         gbc.gridx = 1; singlePanel.add(newUser, gbc);
         gbc.gridx = 2; singlePanel.add(new JLabel("密码:"), gbc);
         gbc.gridx = 3; singlePanel.add(newPass, gbc);
+        gbc.gridx = 4;
+        JButton pwToggleBtn = new JButton("显");
+        pwToggleBtn.setMargin(new Insets(0, 2, 0, 2));
+        pwToggleBtn.addActionListener(e -> {
+            if (newPass.getEchoChar() == 0) {
+                newPass.setEchoChar('*');
+                pwToggleBtn.setText("显");
+            } else {
+                newPass.setEchoChar((char) 0);
+                pwToggleBtn.setText("隐");
+            }
+        });
+        singlePanel.add(pwToggleBtn, gbc);
 
         gbc.gridx = 0; gbc.gridy = 1; singlePanel.add(new JLabel("预设表空间:"), gbc);
         gbc.gridx = 1; singlePanel.add(newTs, gbc);

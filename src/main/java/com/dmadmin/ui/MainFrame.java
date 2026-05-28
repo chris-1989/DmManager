@@ -39,18 +39,24 @@ public class MainFrame extends JFrame {
         DmpImportPanel dmpPanel = new DmpImportPanel(props, session);
         tabs.addTab("DMP 导入", dmpPanel);
 
-        // 初始禁用后两个页签，连接成功后才放开
+        DmpExportPanel exportPanel = new DmpExportPanel(props, session);
+        tabs.addTab("DMP 导出", exportPanel);
+
+        // 初始禁用后三个页签，连接成功后才放开
         tabs.setEnabledAt(1, false);
         tabs.setEnabledAt(2, false);
+        tabs.setEnabledAt(3, false);
 
         connPanel.setOnConnected(() -> {
             tabs.setEnabledAt(1, true);
             tabs.setEnabledAt(2, true);
+            tabs.setEnabledAt(3, true);
         });
 
         connPanel.setOnDisconnected(() -> {
             tabs.setEnabledAt(1, false);
             tabs.setEnabledAt(2, false);
+            tabs.setEnabledAt(3, false);
         });
 
         tabs.addChangeListener((ChangeEvent e) -> {
@@ -58,6 +64,8 @@ public class MainFrame extends JFrame {
                 userPanel.refreshUserList();
             } else if (tabs.getSelectedComponent() == dmpPanel) {
                 dmpPanel.syncFromSession();
+            } else if (tabs.getSelectedComponent() == exportPanel) {
+                exportPanel.syncFromSession();
             }
         });
         add(tabs, BorderLayout.CENTER);

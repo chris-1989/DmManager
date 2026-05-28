@@ -183,7 +183,7 @@ public class DmpImportPanel extends JPanel {
         addFormRow(panel, gbc, 0, "主机", fieldHost);
         addFormRow(panel, gbc, 1, "端口", fieldPort);
         addFormRow(panel, gbc, 2, "使用者", fieldUser);
-        addFormRow(panel, gbc, 3, "密码", fieldPass);
+        addFormRow(panel, gbc, 3, "密码", createPasswordPanel(fieldPass));
 
         return panel;
     }
@@ -209,6 +209,24 @@ public class DmpImportPanel extends JPanel {
         dmpDirPanel.add(btnSelectDmpDir, BorderLayout.EAST);
         addFormRow(panel, gbc, 2, "DMP 文件夹路径", dmpDirPanel);
 
+        return panel;
+    }
+
+    private JPanel createPasswordPanel(JPasswordField passField) {
+        JPanel panel = new JPanel(new BorderLayout(4, 0));
+        panel.add(passField, BorderLayout.CENTER);
+        JButton toggleBtn = new JButton("显示");
+        toggleBtn.setPreferredSize(new Dimension(60, passField.getPreferredSize().height));
+        toggleBtn.addActionListener(e -> {
+            if (passField.getEchoChar() == 0) {
+                passField.setEchoChar('*');
+                toggleBtn.setText("显示");
+            } else {
+                passField.setEchoChar((char) 0);
+                toggleBtn.setText("隐藏");
+            }
+        });
+        panel.add(toggleBtn, BorderLayout.EAST);
         return panel;
     }
 
@@ -397,8 +415,12 @@ public class DmpImportPanel extends JPanel {
                 for (int i = 0; i < dmpFiles.length; i++) {
                     File dmpFile = dmpFiles[i];
                     String dmpName = dmpFile.getName();
-                    // 从 DMP 文件名提取目标用户名（去掉 .dmp 后缀）
+                    // 从 DMP 文件名提取目标用户名（去掉 .dmp 后缀；含下划线则取下划线前第一位）
                     String dmpUser = dmpName.replaceAll("(?i)\\.dmp$", "");
+                    int usIdx = dmpUser.indexOf('_');
+                    if (usIdx > 0) {
+                        dmpUser = dmpUser.substring(0, usIdx);
+                    }
                     String logFileName = dmpUser + "_" + timePrefix + ".log";
                     String logFilePath = new File(logDir, logFileName).getAbsolutePath();
 

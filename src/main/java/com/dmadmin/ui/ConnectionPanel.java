@@ -87,9 +87,33 @@ public class ConnectionPanel extends JPanel {
         addRow(form, gbc, 1, "主机", fieldHost);
         addRow(form, gbc, 2, "端口", fieldPort);
         addRow(form, gbc, 3, "使用者", fieldUser);
-        addRow(form, gbc, 4, "密码", fieldPass);
+
+        JLabel pwLabel = new JLabel("密码");
+        pwLabel.setPreferredSize(new java.awt.Dimension(60, 28));
+        gbc.gridx = 0; gbc.gridy = 4; gbc.gridwidth = 1; gbc.weightx = 0;
+        form.add(pwLabel, gbc);
+        gbc.gridx = 1; gbc.weightx = 1;
+        form.add(createPasswordPanel(fieldPass), gbc);
 
         return form;
+    }
+
+    private JPanel createPasswordPanel(JPasswordField passField) {
+        JPanel panel = new JPanel(new BorderLayout(4, 0));
+        panel.add(passField, BorderLayout.CENTER);
+        JButton toggleBtn = new JButton("显示");
+        toggleBtn.setPreferredSize(new java.awt.Dimension(60, 28));
+        toggleBtn.addActionListener(e -> {
+            if (passField.getEchoChar() == 0) {
+                passField.setEchoChar('*');
+                toggleBtn.setText("显示");
+            } else {
+                passField.setEchoChar((char) 0);
+                toggleBtn.setText("隐藏");
+            }
+        });
+        panel.add(toggleBtn, BorderLayout.EAST);
+        return panel;
     }
 
     private void addRow(JPanel form, GridBagConstraints gbc, int row, String label, JTextField field) {
