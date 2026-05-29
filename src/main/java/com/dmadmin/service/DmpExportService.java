@@ -1,6 +1,7 @@
 package com.dmadmin.service;
 
 import com.dmadmin.dmp.ImportProgressNotifier;
+import com.dmadmin.dmp.ProgressParser;
 import com.dmadmin.exception.DmAdminException;
 import com.dmadmin.model.DbConnectionProfile;
 import com.dmadmin.util.AppProperties;
@@ -9,12 +10,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class DmpExportService {
-
-    private static final Pattern PROGRESS_PATTERN = Pattern.compile("([1-9]\\d?|100)%");
 
     private final String dexpToolPath;
     private final Charset nativeCharset;
@@ -55,7 +52,7 @@ public class DmpExportService {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     notifier.notifyLog("[导出日志] " + line);
-                    Integer progress = parseProgress(line);
+                    Integer progress = ProgressParser.parsePercent(line);
                     if (progress != null) {
                         notifier.notifyProgress(progress);
                     }
@@ -83,11 +80,5 @@ public class DmpExportService {
             notifier.notifyProgress(0);
             throw new DmAdminException(err, e);
         }
-    }
-
-    private Integer parseProgress(String logLine) {
-        if (logLine == null) return null;
-        Matcher matcher = PROGRESS_PATTERN.matcher(logLine);
-        return matcher.find() ? Integer.parseInt(matcher.group(1)) : null;
     }
 }

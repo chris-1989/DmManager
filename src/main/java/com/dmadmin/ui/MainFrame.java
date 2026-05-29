@@ -61,7 +61,7 @@ public class MainFrame extends JFrame {
 
         tabs.addChangeListener((ChangeEvent e) -> {
             if (tabs.getSelectedComponent() == userPanel) {
-                userPanel.refreshUserList();
+                userPanel.refreshUsers();
             } else if (tabs.getSelectedComponent() == dmpPanel) {
                 dmpPanel.syncFromSession();
             } else if (tabs.getSelectedComponent() == exportPanel) {

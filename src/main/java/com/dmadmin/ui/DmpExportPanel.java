@@ -5,33 +5,10 @@ import com.dmadmin.dmp.ImportProgressNotifier;
 import com.dmadmin.model.DbConnectionProfile;
 import com.dmadmin.service.DmpExportService;
 import com.dmadmin.util.AppProperties;
+import com.dmadmin.util.SwingComponents;
 
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComponent;
-import javax.swing.JDialog;
-import javax.swing.JFileChooser;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JPasswordField;
-import javax.swing.JProgressBar;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
-import javax.swing.SwingWorker;
-import java.awt.BorderLayout;
-import java.awt.Dialog;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Font;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.GridLayout;
-import java.awt.Insets;
-import java.awt.Window;
+import javax.swing.*;
+import java.awt.*;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -230,7 +207,7 @@ public class DmpExportPanel extends JPanel {
         addFormRow(panel, gbc, 0, "主机", fieldHost);
         addFormRow(panel, gbc, 1, "端口", fieldPort);
         addFormRow(panel, gbc, 2, "使用者", fieldUser);
-        addFormRow(panel, gbc, 3, "密码", createPasswordPanel(fieldPass));
+        addFormRow(panel, gbc, 3, "密码", SwingComponents.createPasswordPanel(fieldPass));
 
         return panel;
     }
@@ -263,81 +240,29 @@ public class DmpExportPanel extends JPanel {
     }
 
     private JPanel createPasswordPanel(JPasswordField passField) {
-        JPanel panel = new JPanel(new BorderLayout(4, 0));
-        panel.add(passField, BorderLayout.CENTER);
-        JButton toggleBtn = new JButton("显示");
-        toggleBtn.setPreferredSize(new Dimension(60, passField.getPreferredSize().height));
-        toggleBtn.addActionListener(e -> {
-            if (passField.getEchoChar() == 0) {
-                passField.setEchoChar('*');
-                toggleBtn.setText("显示");
-            } else {
-                passField.setEchoChar((char) 0);
-                toggleBtn.setText("隐藏");
-            }
-        });
-        panel.add(toggleBtn, BorderLayout.EAST);
-        return panel;
+        return SwingComponents.createPasswordPanel(passField);
     }
 
     private void addFormRow(JPanel panel, GridBagConstraints gbc, int row, String label, JComponent field) {
-        JLabel jLabel = new JLabel(label);
-        gbc.gridx = 0;
-        gbc.gridy = row;
-        gbc.weightx = 0;
-        panel.add(jLabel, gbc);
-
-        gbc.gridx = 1;
-        gbc.weightx = 1;
-        panel.add(field, gbc);
+        SwingComponents.addFormRow(panel, gbc, row, label, field);
     }
 
     private JPanel buildCenterPanel() {
-        JPanel panel = new JPanel(new BorderLayout(0, 6));
-        panel.setBorder(BorderFactory.createTitledBorder("导出日志"));
-
-        logArea.setEditable(false);
-        logArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
-        JScrollPane logScroll = new JScrollPane(logArea);
-        logScroll.setPreferredSize(new Dimension(0, 280));
-        panel.add(logScroll, BorderLayout.CENTER);
-
-        return panel;
+        return SwingComponents.buildLogPanel(logArea, "导出日志");
     }
 
     private JPanel buildSouthPanel() {
-        JPanel panel = new JPanel(new BorderLayout(8, 4));
-
-        progress.setStringPainted(true);
-        progress.setPreferredSize(new Dimension(0, 22));
-        panel.add(progress, BorderLayout.CENTER);
-
         JButton runBtn = new JButton("开始导出");
         runBtn.addActionListener(e -> runExport());
-        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
-        btnPanel.add(runBtn);
-        panel.add(btnPanel, BorderLayout.EAST);
-
-        return panel;
+        return SwingComponents.buildActionPanel(progress, runBtn);
     }
 
     private void appendLog(String line) {
-        SwingUtilities.invokeLater(() -> {
-            logArea.append(line + "\n");
-            logArea.setCaretPosition(logArea.getDocument().getLength());
-        });
+        SwingComponents.appendLog(logArea, line);
     }
 
     private File resolveLogDir() {
-        String logDir = props.getString("dm.dimp.log.dir", "");
-        if (logDir.isEmpty()) {
-            logDir = new File("logs", "dmp").getAbsolutePath();
-        }
-        File dir = new File(logDir);
-        if (!dir.exists()) {
-            dir.mkdirs();
-        }
-        return dir;
+        return SwingComponents.resolveLogDir(props);
     }
 
     private void runExport() {
@@ -452,10 +377,6 @@ public class DmpExportPanel extends JPanel {
     }
 
     private static Throwable unwrap(Exception ex) {
-        Throwable t = ex;
-        if (ex instanceof java.util.concurrent.ExecutionException && ex.getCause() != null) {
-            t = ex.getCause();
-        }
-        return t;
+        return SwingComponents.unwrapCause(ex);
     }
 }

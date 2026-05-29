@@ -3,21 +3,10 @@ package com.dmadmin.ui;
 import com.dmadmin.exception.DmAdminException;
 import com.dmadmin.model.DbConnectionProfile;
 import com.dmadmin.service.ConnectionManagementService;
+import com.dmadmin.util.SwingComponents;
 
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JPasswordField;
-import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
-import javax.swing.SwingWorker;
-import java.awt.BorderLayout;
-import java.awt.FlowLayout;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
+import javax.swing.*;
+import java.awt.*;
 
 /**
  * 连接设定：注册 HikariCP 池并测试连接。
@@ -87,48 +76,13 @@ public class ConnectionPanel extends JPanel {
         addRow(form, gbc, 1, "主机", fieldHost);
         addRow(form, gbc, 2, "端口", fieldPort);
         addRow(form, gbc, 3, "使用者", fieldUser);
-
-        JLabel pwLabel = new JLabel("密码");
-        pwLabel.setPreferredSize(new java.awt.Dimension(60, 28));
-        gbc.gridx = 0; gbc.gridy = 4; gbc.gridwidth = 1; gbc.weightx = 0;
-        form.add(pwLabel, gbc);
-        gbc.gridx = 1; gbc.weightx = 1;
-        form.add(createPasswordPanel(fieldPass), gbc);
+        addRow(form, gbc, 4, "密码", SwingComponents.createPasswordPanel(fieldPass));
 
         return form;
     }
 
-    private JPanel createPasswordPanel(JPasswordField passField) {
-        JPanel panel = new JPanel(new BorderLayout(4, 0));
-        panel.add(passField, BorderLayout.CENTER);
-        JButton toggleBtn = new JButton("显示");
-        toggleBtn.setPreferredSize(new java.awt.Dimension(60, 28));
-        toggleBtn.addActionListener(e -> {
-            if (passField.getEchoChar() == 0) {
-                passField.setEchoChar('*');
-                toggleBtn.setText("显示");
-            } else {
-                passField.setEchoChar((char) 0);
-                toggleBtn.setText("隐藏");
-            }
-        });
-        panel.add(toggleBtn, BorderLayout.EAST);
-        return panel;
-    }
-
-    private void addRow(JPanel form, GridBagConstraints gbc, int row, String label, JTextField field) {
-        JLabel jLabel = new JLabel(label);
-        jLabel.setPreferredSize(new java.awt.Dimension(60, 28));
-        gbc.gridx = 0;
-        gbc.gridy = row;
-        gbc.gridwidth = 1;
-        gbc.weightx = 0;
-        form.add(jLabel, gbc);
-
-        gbc.gridx = 1;
-        gbc.gridy = row;
-        gbc.weightx = 1;
-        form.add(field, gbc);
+    private void addRow(JPanel form, GridBagConstraints gbc, int row, String label, JComponent field) {
+        SwingComponents.addFormRow(form, gbc, row, label, field);
     }
 
     private JPanel buildButtonPanel() {

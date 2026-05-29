@@ -126,7 +126,6 @@ public class UserManagementPanel extends JPanel {
         privOutput.setEditable(false);
         loadCategoriesFromProperties();
         initBatchCreationUI();
-        initRoleBatchUI();
     }
 
     /**
@@ -410,9 +409,6 @@ public class UserManagementPanel extends JPanel {
         if (categories != null && !categories.isEmpty()) categoryCombo.setSelectedIndex(0);
     }
 
-    private void initRoleBatchUI() {
-    }
-
     private void batchGrantRoles() {
         int idx = roleCategoryCombo.getSelectedIndex();
         if (idx < 0 || idx >= categories.size()) {
@@ -575,11 +571,7 @@ public class UserManagementPanel extends JPanel {
         return new UserManagementService(session.getConnectionId(), poolManager);
     }
 
-    public void refreshUserList() {
-        refreshUsers();
-    }
-
-    private void refreshUsers() {
+    public void refreshUsers() {
         new SwingWorker<List<UserSummary>, Void>() {
             @Override
             protected List<UserSummary> doInBackground() throws Exception {
